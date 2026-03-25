@@ -10,6 +10,7 @@ def load_task(json_file_path):
     return data
 
 def save_task(file_path , task):
-    if os.path.exists(file_path):
+        folder = os.path.dirname(file_path)
+        os.makedirs(folder, exist_ok=True)
         with open(file_path , mode = 'w' , encoding= 'utf-8') as write_file: 
             json.dump(task , write_file , indent=4)
