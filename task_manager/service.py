@@ -21,7 +21,7 @@ class TaskManager:
         }
         save_task(self.path , self.task)
 
-        return {"id": task_id, "task": task, "priority": priority}
+        return {"task_id": task_id, "task": task, "priority": priority}
     
 
     def sort_task(self): 
