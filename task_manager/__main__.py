@@ -7,16 +7,16 @@ def add_task():
         priority = int(input('Enter the priority that you want to add : '))
         task_added = manager.add_task(task , priority)
 
-        print(
+        print( 
         f"Task added successfully\n"
-        f"Task ID: {task_added['id']}\n"
+        f"Task ID: {task_added['task_id']}\n"
         f"Task: {task_added['task']}\n"
         f"Priority: {task_added['priority']}")
     except ValueError as e: 
         print(f"Error : {e}")
 
 
-def list_task():
+def list_tasks():
     tasks = manager.list_task()
 
     if not tasks: 
@@ -25,12 +25,12 @@ def list_task():
     
     print("\nListing all the added task : ")
 
-    for sno , details in tasks:
-        print(f"{sno}. Task : {details['task']} , Priority : {details['priority']}")
+    for sno ,task_id ,  details in tasks:
+        print(f"{sno}. Task_id : {details['task_id']} , Task : {details['task']} , Priority : {details['priority']}")
 
 def delete_task():
     try:
-        list_task()
+        list_tasks()
         sno = int(input('\nEnter the serial number of the number of the task to delete: '))
         delete_task = manager.delete_task(sno)
         print(f'\nSucessfully deleted the task with id ')
@@ -43,7 +43,7 @@ def delete_task():
 
 def edit_task():
     try: 
-        list_task()
+        list_tasks() 
         sno = int(input("\nEnter the serial number of the task to edit: "))
 
         new_task = input("Enter new task (leave blank to keep same): ").strip()

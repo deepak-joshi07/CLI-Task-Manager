@@ -1,11 +1,11 @@
 import uuid
 from pathlib import Path
 from .storage import load_task , save_task
-from .validator import valid_priority , valid_sno
+from .validator import valid_priority , valid_sno ,valid_task
 class TaskManager:
-    def __init__(self , file_path = 'data//tasks.json' ):
-        self.path = Path(__file__).resolve().parent.parent /"data"/"task.json"
-        self.task = load_task(self.path)
+    def __init__(self):
+        self.path = Path(__file__).resolve().parent.parent /"data"/"tasks.json" # Ot wo;; later move to config
+        self.tasks = load_task(self.path)
     
     def add_task(self , task , priority): 
         # genrating task id
@@ -13,67 +13,60 @@ class TaskManager:
 
         # Handeling priority
         valid_priority(priority)
+        # checking for valid task
+        task = valid_task(task)
        # append it to the task.json
 
-        self.task[task_id] = {
+        self.tasks[task_id] = {
             'task' : task,
             'priority' : priority
         }
-        save_task(self.path , self.task)
+        save_task(self.path , self.tasks)
 
         return {"task_id": task_id, "task": task, "priority": priority}
     
 
-    def sort_task(self): 
-        sorted_data = dict(sorted(self.task.items() , key = lambda x : x[1]['priority']))
-        return sorted_data
+    def sort_tasks(self): 
+        sorted_tasks =  sorted(
+            self.tasks.items() , 
+            key = lambda task_item : task_item[1]['priority'])
+        return sorted_tasks
 
 
-    def list_task(self): 
-        sorted_task = self.sort_task()
+    def list_tasks(self): 
+        sorted_tasks = self.sort_tasks()
         result = []
-        for i , (task_id , detail) in enumerate(sorted_task.items()):
-            result.append([i+1, detail ])
+        for sno , (task_id , detail) in enumerate(sorted_tasks , start=1):
+            result.append((sno,task_id ,  detail ))
         return result
 
+    def get_task_id_by_sno(self , sno): 
+        sorted_tasks = self.sort_tasks()
+        valid_sno(sorted_tasks , sno)
 
+        for serial_no , (task_id , detail) in enumerate(sorted_tasks , start = 1):
+            if serial_no == sno: 
+                return task_id
+            
+        raise ValueError('Invalid serial number')
 
     def delete_task(self , sno): 
-        # call list_task function -> which store task in sorte order with numbering as uuid can give any id 
-        sorted_task = self.sort_task()
-        valid_sno(sorted_task , sno)
-        task_to_delete = None
-        delete_id = None
-        # Ask the user to select one serial number
-        for i , (task_id , detail) in enumerate(sorted_task.items()): 
-            if i+1 == sno : 
-                delete_id = task_id
-                break
-
-        if delete_id is None: 
-            raise ValueError('Invalid serial number')
-
+        delete_id = self.get_task_id_by_sno(sno)
         #  Delete the selected task 
-        task_to_delete = self.task[delete_id]
-        del self.task[delete_id]
-        save_task(self.path , self.task)
+        task_to_delete = self.tasks[delete_id]
+        del self.tasks[delete_id]
+        save_task(self.path , self.tasks)
         return task_to_delete
     
     def edit_task(self ,sno, new_task = None , new_priority = None):
-        sorted_task = self.sort_task()
-        valid_sno(sorted_task , sno)
-        edit_id = None
+        edit_task_id = self.get_task_id_by_sno(sno)
 
-        # find the task to edit
-        for i , (task_id , detail) in enumerate(sorted_task.items()): 
-            if i+1 == sno : 
-                edit_id = task_id
-                break
         if new_task is not None:
-            self.task[edit_id]['task'] = new_task
+            new_task = valid_task(new_task)
+            self.tasks[edit_task_id]['task'] = new_task
         if  new_priority is not None: 
             valid_priority(new_priority)
-            self.task[edit_id]['priority'] = new_priority
-        save_task(self.path , self.task)
-        return self.task[edit_id]
+            self.tasks[edit_task_id]['priority'] = new_priority
+        save_task(self.path , self.tasks)
+        return self.tasks[edit_task_id]
 
