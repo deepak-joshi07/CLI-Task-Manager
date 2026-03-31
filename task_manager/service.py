@@ -1,7 +1,7 @@
 import uuid
 from pathlib import Path
 from .storage import load_task, save_task
-from .validator import valid_priority, valid_sno, valid_task
+from .validator import valid_priority, valid_sno, valid_task , valid_category
 from datetime import datetime
 
 
@@ -10,11 +10,12 @@ class TaskManager:
         self.path = Path(__file__).resolve().parent.parent / "data" / "tasks.json"
         self.tasks = load_task(self.path)
 
-    def add_task(self, task, priority):
+    def add_task(self, task, priority , category):
         task_id = str(uuid.uuid4())
 
         valid_priority(priority)
         task = valid_task(task)
+        category = valid_category(category)
 
         completed = False
         created_at = datetime.now().isoformat(timespec="seconds")
@@ -23,6 +24,7 @@ class TaskManager:
         self.tasks[task_id] = {
             'task': task,
             'priority': priority,
+            'category' : category,
             'completed': completed,
             'created_at' : created_at,
             'updated_at' : updated_at
@@ -36,7 +38,8 @@ class TaskManager:
             "priority": priority,
             "completed": completed,
             "created_at": created_at,
-            "updated_at": updated_at
+            "updated_at": updated_at,
+            "category": category
         }
 
     def mark_task_complete(self, sno):
@@ -92,7 +95,7 @@ class TaskManager:
 
         return task_to_delete
 
-    def edit_task(self, sno, new_task=None, new_priority=None):
+    def edit_task(self, sno, new_task=None, new_priority=None , new_category = None):
         edit_task_id = self.get_task_id_by_sno(sno)
 
         if new_task is not None:
@@ -102,6 +105,10 @@ class TaskManager:
         if new_priority is not None:
             valid_priority(new_priority)
             self.tasks[edit_task_id]['priority'] = new_priority
+
+        if new_category is not None: 
+            new_category = valid_category(new_category)
+            self.tasks[edit_task_id]['category'] = new_category
 
         if 'completed' not in self.tasks[edit_task_id]:
             self.tasks[edit_task_id]['completed'] = False
