@@ -1,5 +1,4 @@
 from task_manager.service import TaskManager
-
 manager = TaskManager()
 
 
@@ -14,7 +13,9 @@ def add_task():
             f"Task ID: {task_added['task_id']}\n"
             f"Task: {task_added['task']}\n"
             f"Priority: {task_added['priority']}\n"
-            f"Completed: {task_added['completed']}"
+            f"Completed: {task_added['completed']}\n"
+            f"Created_at: {task_added['created_at']}\n"
+            f"Updated_at: {task_added['updated_at']}"
         )
     except ValueError as e:
         print(f"Error: {e}")
@@ -35,7 +36,9 @@ def list_tasks():
             f"Task ID: {task_id} | "
             f"Task: {details['task']} | "
             f"Priority: {details['priority']} | "
-            f"Completed: {details['completed']}"
+            f"Completed: {details['completed']} |"
+            f"Created_at: {details['created_at']} |"
+            f"Updated_at: {details['updated_at']}"
         )
 
 
@@ -49,6 +52,8 @@ def delete_task():
         print(f"Task: {deleted_task['task']}")
         print(f"Priority: {deleted_task['priority']}")
         print(f"Completed: {deleted_task['completed']}")
+        print(f"Created_at: {deleted_task['created_at']}")
+        print(f"Updated_at: {deleted_task['updated_at']}")
 
     except ValueError as e:
         print(f"Error: {e}")
@@ -71,6 +76,8 @@ def edit_task():
         print(f"Task: {updated_task['task']}")
         print(f"Priority: {updated_task['priority']}")
         print(f"Completed: {updated_task['completed']}")
+        print(f"Created_at: {updated_task['created_at']}")
+        print(f"Updated_at: {updated_task['updated_at']}")
 
     except ValueError as e:
         print(f"Error: {e}")
@@ -87,6 +94,8 @@ def mark_task_complete():
         print(f"Task: {completed_task['task']}")
         print(f"Priority: {completed_task['priority']}")
         print(f"Completed: {completed_task['completed']}")
+        print(f"Created_at: {completed_task['created_at']}")
+        print(f"Updated_at: {completed_task['updated_at']}")
 
     except ValueError as e:
         print(f"Error: {e}")

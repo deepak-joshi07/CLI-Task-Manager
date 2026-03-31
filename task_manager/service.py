@@ -2,6 +2,7 @@ import uuid
 from pathlib import Path
 from .storage import load_task, save_task
 from .validator import valid_priority, valid_sno, valid_task
+from datetime import datetime
 
 
 class TaskManager:
@@ -16,11 +17,15 @@ class TaskManager:
         task = valid_task(task)
 
         completed = False
+        created_at = datetime.now().isoformat(timespec="seconds")
+        updated_at = None
 
         self.tasks[task_id] = {
             'task': task,
             'priority': priority,
-            'completed': completed
+            'completed': completed,
+            'created_at' : created_at,
+            'updated_at' : updated_at
         }
 
         save_task(self.path, self.tasks)
@@ -29,7 +34,9 @@ class TaskManager:
             "task_id": task_id,
             "task": task,
             "priority": priority,
-            "completed": completed
+            "completed": completed,
+            "created_at": created_at,
+            "updated_at": updated_at
         }
 
     def mark_task_complete(self, sno):
@@ -40,6 +47,7 @@ class TaskManager:
             raise ValueError("Task is already completed.")
 
         completed_task['completed'] = True
+        completed_task['updated_at'] = datetime.now().isoformat(timespec="seconds")
         save_task(self.path, self.tasks)
 
         return completed_task
@@ -97,6 +105,8 @@ class TaskManager:
 
         if 'completed' not in self.tasks[edit_task_id]:
             self.tasks[edit_task_id]['completed'] = False
+        
+        self.tasks[edit_task_id]['updated_at'] = datetime.now().isoformat(timespec= "seconds")
 
         save_task(self.path, self.tasks)
         return self.tasks[edit_task_id]
