@@ -70,8 +70,6 @@ class TaskManager:
         result = []
 
         for sno, (task_id, detail) in enumerate(sorted_tasks, start=1):
-            if 'completed' not in detail:
-                detail['completed'] = False
             result.append((sno, task_id, detail))
 
         return result
@@ -90,8 +88,6 @@ class TaskManager:
         delete_id = self.get_task_id_by_sno(sno)
         task_to_delete = self.tasks[delete_id]
 
-        if 'completed' not in task_to_delete:
-            task_to_delete['completed'] = False
 
         del self.tasks[delete_id]
         save_task(self.path, self.tasks)
@@ -112,9 +108,6 @@ class TaskManager:
         if new_category is not None: 
             new_category = valid_category(new_category)
             self.tasks[edit_task_id]['category'] = new_category
-           
-        if 'completed' not in self.tasks[edit_task_id]:
-            self.tasks[edit_task_id]['completed'] = False
         
         if new_due_date is not None: 
             new_due_date = valid_due_date(new_due_date)
@@ -124,3 +117,18 @@ class TaskManager:
 
         save_task(self.path, self.tasks)
         return self.tasks[edit_task_id]
+    
+    def filter_by_completion_status(self , status = "pending"):
+        if status not in ["pending", "completed"]:
+            raise ValueError("Status must be either 'pending' or 'completed'")
+        
+        sorted_task = self.sort_tasks()
+        filtered_tasks = []
+        for sno , (task_id , details) in enumerate(sorted_task , start=1): 
+            if status == "completed" and details['completed']:
+                filtered_tasks.append((sno , task_id , details))
+            elif status == "pending" and not details['completed']:
+                filtered_tasks.append((sno , task_id , details))
+        return filtered_tasks
+
+

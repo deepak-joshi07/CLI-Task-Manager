@@ -115,3 +115,29 @@ def mark_task_complete():
 
     except ValueError as e:
         print(f"Error: {e}")
+
+def filter_task_by_completion():
+    status = input("Enter either 'completed' or 'pending': ").strip().lower()
+
+    try:
+        filtered_task = manager.filter_by_completion_status(status)
+        if not filtered_task:
+            print(f"\nNo {status} tasks found.")
+            return
+
+        for sno ,task_id , details in filtered_task:
+            print(
+            f"{sno}. "
+            f"Task ID: {task_id} | "
+            f"Task: {details['task']} | "
+            f"Priority: {details['priority']} | "
+            f"Category: {details['category']} |"
+            f"Due Date: {details['due_date']} |"
+            f"Completed: {details['completed']} |"
+            f"Created_at: {details['created_at']} |"
+            f"Updated_at: {details['updated_at']}"
+        )
+    except ValueError as e:
+        print(f"Error : {e}")
+
+
