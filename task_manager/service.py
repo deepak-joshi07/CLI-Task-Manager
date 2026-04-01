@@ -130,5 +130,43 @@ class TaskManager:
             elif status == "pending" and not details['completed']:
                 filtered_tasks.append((sno , task_id , details))
         return filtered_tasks
+    
+
+    def sort_tasks_by_due_date(self): 
+        sorted_tasks = sorted(
+            self.tasks.items(),
+            key = lambda task_items : task_items[1]['due_date']
+        )
+
+        result = []
+
+        for sno , (task_id , details) in enumerate(sorted_tasks , start = 1):
+            result.append((sno , task_id , details))
+
+        return result
+    
+    def filter_overdue_tasks(self): 
+        overdue_tasks = []
+        today = datetime.now().date().isoformat()
+        sorted_tasks = self.sort_tasks_by_due_date()
+
+        for sno ,task_id , details in sorted_tasks:
+            if details['due_date']<today and not details['completed']:
+                overdue_tasks.append((sno , task_id , details))
+
+        return overdue_tasks
+    
+    def filter_task_due_today(self): 
+        overdue_today = []
+        today = datetime.now().date().isoformat()
+        sorted_tasks = self.sort_tasks_by_due_date()
+
+        for sno , task_id , details in sorted_tasks:
+            if details['due_date'] == today: 
+                overdue_today.append((sno , task_id , details))
+
+        return overdue_today
+
+
 
 
