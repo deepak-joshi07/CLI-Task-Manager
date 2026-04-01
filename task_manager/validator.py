@@ -1,4 +1,5 @@
 import re
+from datetime import datetime , date
 def valid_priority(priority):
 
     if not isinstance(priority , int):
@@ -49,4 +50,24 @@ def valid_category(category):
         raise ValueError("Category cannot be greater than 15 characters")
 
     return cleaned_category
+
+
+def valid_due_date(due_date, format_string="%Y-%m-%d"):
+    if not isinstance(due_date, str):
+        raise ValueError("Expected a string value")
+
+    due_date = due_date.strip()
+
+    if due_date == "":
+        raise ValueError("Due date cannot be empty")
+
+    try:
+        parsed_date = datetime.strptime(due_date, format_string).date()
+    except ValueError:
+        raise ValueError("Invalid format. Use YYYY-MM-DD")
+
+    if parsed_date < date.today():
+        raise ValueError("Due date cannot be in the past")
+
+    return due_date
     

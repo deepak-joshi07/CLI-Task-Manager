@@ -1,7 +1,7 @@
 import uuid
 from pathlib import Path
 from .storage import load_task, save_task
-from .validator import valid_priority, valid_sno, valid_task , valid_category
+from .validator import valid_priority, valid_sno, valid_task , valid_category , valid_due_date
 from datetime import datetime
 
 
@@ -10,12 +10,13 @@ class TaskManager:
         self.path = Path(__file__).resolve().parent.parent / "data" / "tasks.json"
         self.tasks = load_task(self.path)
 
-    def add_task(self, task, priority , category):
+    def add_task(self, task, priority , category , due_date):
         task_id = str(uuid.uuid4())
 
         valid_priority(priority)
         task = valid_task(task)
         category = valid_category(category)
+        due_date = valid_due_date(due_date)
 
         completed = False
         created_at = datetime.now().isoformat(timespec="seconds")
@@ -25,6 +26,7 @@ class TaskManager:
             'task': task,
             'priority': priority,
             'category' : category,
+            'due_date' : due_date,
             'completed': completed,
             'created_at' : created_at,
             'updated_at' : updated_at
@@ -36,10 +38,11 @@ class TaskManager:
             "task_id": task_id,
             "task": task,
             "priority": priority,
+            'category': category,
+            'due_date': due_date,
             "completed": completed,
             "created_at": created_at,
-            "updated_at": updated_at,
-            "category": category
+            "updated_at": updated_at
         }
 
     def mark_task_complete(self, sno):
@@ -95,7 +98,7 @@ class TaskManager:
 
         return task_to_delete
 
-    def edit_task(self, sno, new_task=None, new_priority=None , new_category = None):
+    def edit_task(self, sno, new_task=None, new_priority=None , new_category = None , new_due_date = None):
         edit_task_id = self.get_task_id_by_sno(sno)
 
         if new_task is not None:
@@ -109,9 +112,13 @@ class TaskManager:
         if new_category is not None: 
             new_category = valid_category(new_category)
             self.tasks[edit_task_id]['category'] = new_category
-
+           
         if 'completed' not in self.tasks[edit_task_id]:
             self.tasks[edit_task_id]['completed'] = False
+        
+        if new_due_date is not None: 
+            new_due_date = valid_due_date(new_due_date)
+            self.tasks[edit_task_id]['due_date'] = new_due_date
         
         self.tasks[edit_task_id]['updated_at'] = datetime.now().isoformat(timespec= "seconds")
 
