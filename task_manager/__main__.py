@@ -156,3 +156,16 @@ def filter_task_due_today():
 
     print("\nTasks due today:\n")
     print_task_list(tasks)
+
+
+def search_task():
+    try:
+        keyword = input("Enter the keyword that you want to search: ")
+        tasks = manager.search_tasks(keyword)
+        if not tasks:
+            print("\nNo matching tasks found")
+            return 
+        print(f"\nSearch result for '{keyword}':\n")
+        print_task_list(tasks)
+    except ValueError as e:
+        print(f"Error: {e}")

@@ -162,10 +162,42 @@ class TaskManager:
         sorted_tasks = self.sort_tasks_by_due_date()
 
         for sno , task_id , details in sorted_tasks:
-            if details['due_date'] == today: 
+            if details['due_date'] == today and not details['completed']: 
                 overdue_today.append((sno , task_id , details))
 
         return overdue_today
+    
+
+    def search_tasks(self , keyword): 
+        keyword = keyword.strip().lower()
+
+        if not keyword:
+            raise ValueError("Search keyword cannot be empty")
+        
+        matching_tasks = []
+        sorted_task = self.sort_tasks()
+
+        for sno , (task_id , details) in enumerate(sorted_task , start = 1): 
+            task_text = details['task'].lower()
+            category_text = details['category'].lower()
+            due_date_text = details['due_date'].lower()
+            priority_text = str(details['priority'])
+            completed_text = "completed" if details['completed'] else "pending"
+            if (
+                keyword in task_text
+                or keyword in category_text
+                or keyword in due_date_text
+                or keyword in priority_text
+                or keyword in completed_text
+                ):
+                matching_tasks.append((sno , task_id , details))
+
+        return matching_tasks
+    
+    
+
+
+
 
 
 
