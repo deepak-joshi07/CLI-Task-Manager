@@ -1,4 +1,5 @@
 from task_manager.service import TaskManager
+from .validator import valid_options
 
 manager = TaskManager()
 
@@ -41,22 +42,60 @@ def add_task():
         print(f"Error: {e}")
 
 
-def list_tasks():
-    tasks = manager.list_tasks()
+def get_all_tasks():
+    return manager.list_tasks()
 
+
+def get_search_tasks():
+    keyword = input("Enter the keyword that you want to search: ")
+    return manager.search_tasks(keyword)
+
+
+def select_options():
+    option = int(input(
+        "Do you want to:\n"
+        "1. Search the task\n"
+        "2. List all tasks\n"
+        "Select either 1 or 2: "
+    ))
+    return option
+
+
+def show_task_list(tasks, title="Tasks"):
     if not tasks:
-        print("\nNo tasks available.")
+        print("\nNo tasks found.")
         return
 
-    print("\nListing all tasks:\n")
+    print(f"\n{title}:\n")
     print_task_list(tasks)
+
+
+def choose_task_source():
+    option = select_options()
+    valid_options(option)
+
+    if option == 1:
+        tasks = get_search_tasks()
+        title = "Search Results"
+    else:
+        tasks = get_all_tasks()
+        title = "All Tasks"
+
+    return tasks, title
 
 
 def delete_task():
     try:
-        list_tasks()
+        tasks, title = choose_task_source()
+
+        if not tasks:
+            print("\nNo matching tasks found.")
+            return
+
+        show_task_list(tasks, title)
+
         sno = int(input("\nEnter the serial number of the task to delete: "))
-        deleted_task = manager.delete_task(sno)
+        deleted_task = manager.delete_task_by_list(tasks, sno)
 
         print("\nTask deleted successfully")
         print_single_task(deleted_task)
@@ -65,22 +104,39 @@ def delete_task():
         print(f"Error: {e}")
 
 
+def get_edit_input():
+    new_task = input("Enter new task (leave blank to keep same): ").strip()
+    new_priority = input("Enter new priority (leave blank to keep same): ").strip()
+    new_category = input("Enter new category (leave blank to keep same): ").strip()
+    new_due_date = input("Enter new due date (leave blank to keep same): ").strip()
+
+    new_task = new_task if new_task else None
+    new_priority = int(new_priority) if new_priority else None
+    new_category = new_category if new_category else None
+    new_due_date = new_due_date if new_due_date else None
+
+    return new_task, new_priority, new_category, new_due_date
+
+
 def edit_task():
     try:
-        list_tasks()
+        tasks, title = choose_task_source()
+
+        if not tasks:
+            print("\nNo matching tasks found.")
+            return
+
+        show_task_list(tasks, title)
         sno = int(input("\nEnter the serial number of the task to edit: "))
 
-        new_task = input("Enter new task (leave blank to keep same): ").strip()
-        new_priority = input("Enter new priority (leave blank to keep same): ").strip()
-        new_category = input("Enter new category (leave blank to keep same): ").strip()
-        new_due_date = input("Enter new due date (leave blank to keep same): ").strip()
+        new_task, new_priority, new_category, new_due_date = get_edit_input()
 
-        new_task = new_task if new_task else None
-        new_priority = int(new_priority) if new_priority else None
-        new_category = new_category if new_category else None
-        new_due_date = new_due_date if new_due_date else None
+        if all(value is None for value in [new_task, new_priority, new_category, new_due_date]):
+            print("\nNo changes provided.")
+            return
 
-        updated_task = manager.edit_task(
+        updated_task = manager.edit_task_by_list(
+            tasks,
             sno,
             new_task,
             new_priority,
@@ -97,75 +153,19 @@ def edit_task():
 
 def mark_task_complete():
     try:
-        list_tasks()
+        tasks, title = choose_task_source()
+
+        if not tasks:
+            print("\nNo matching tasks found.")
+            return
+
+        show_task_list(tasks, title)
+
         sno = int(input("\nEnter the serial number of task you want to mark complete: "))
-        completed_task = manager.mark_task_complete(sno)
+        completed_task = manager.mark_task_complete(tasks, sno)
 
         print("\nTask marked as completed successfully")
         print_single_task(completed_task)
 
-    except ValueError as e:
-        print(f"Error: {e}")
-
-
-def filter_task_by_completion():
-    status = input("Enter either 'completed' or 'pending': ").strip().lower()
-
-    try:
-        filtered_task = manager.filter_by_completion_status(status)
-
-        if not filtered_task:
-            print(f"\nNo {status} tasks found.")
-            return
-
-        print(f"\n{status.capitalize()} tasks:\n")
-        print_task_list(filtered_task)
-
-    except ValueError as e:
-        print(f"Error: {e}")
-
-
-def sort_tasks_by_due_date():
-    tasks = manager.sort_tasks_by_due_date()
-
-    if not tasks:
-        print("\nNo task available")
-        return
-
-    print("\nTasks sorted by due date:\n")
-    print_task_list(tasks)
-
-
-def filter_overdue_tasks():
-    tasks = manager.filter_overdue_tasks()
-
-    if not tasks:
-        print("\nNo overdue tasks available")
-        return
-
-    print("\nOverdue tasks:\n")
-    print_task_list(tasks)
-
-
-def filter_task_due_today():
-    tasks = manager.filter_task_due_today()
-
-    if not tasks:
-        print("\nNo tasks due today")
-        return
-
-    print("\nTasks due today:\n")
-    print_task_list(tasks)
-
-
-def search_task():
-    try:
-        keyword = input("Enter the keyword that you want to search: ")
-        tasks = manager.search_tasks(keyword)
-        if not tasks:
-            print("\nNo matching tasks found")
-            return 
-        print(f"\nSearch result for '{keyword}':\n")
-        print_task_list(tasks)
     except ValueError as e:
         print(f"Error: {e}")

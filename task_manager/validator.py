@@ -1,36 +1,32 @@
 import re
-from datetime import datetime , date
+from datetime import datetime, date
+
+
 def valid_priority(priority):
+    if not isinstance(priority, int):
+        raise ValueError("Priority must be an integer")
 
-    if not isinstance(priority , int):
-        raise ValueError('Expected an integer value')
-    
-    if priority < 1 or priority>4:
-        raise ValueError('Value outside the range')
-    
-def valid_sno(tasks , sno):
-    valid = len(tasks)
+    if priority < 1 or priority > 4:
+        raise ValueError("Priority must be between 1 and 4")
 
-    if not isinstance(sno , int):
-        raise ValueError('Expected a integer value')
-    
-    if 1> sno or sno  >valid: 
-        raise ValueError('Value out side the range')
+    return priority
 
-    
-def valid_task(task): 
-    if not isinstance(task , str):
-        raise ValueError('Task must be a string')
-    
+
+def valid_task(task):
+    if not isinstance(task, str):
+        raise ValueError("Task must be a string")
+
     cleaned_task = task.strip()
 
-    if cleaned_task == "": 
-        raise ValueError("Error : Content required !")
-    elif not re.search(r'\w' , cleaned_task , re.UNICODE):
-        raise ValueError('Task must contain atleast one letter or number')
-    elif len(cleaned_task) > 100:
-        raise ValueError('Task cannot be greater than 100 characters')
-    
+    if cleaned_task == "":
+        raise ValueError("Task cannot be empty")
+
+    if not re.search(r"\w", cleaned_task, re.UNICODE):
+        raise ValueError("Task must contain at least one letter or number")
+
+    if len(cleaned_task) > 100:
+        raise ValueError("Task cannot be greater than 100 characters")
+
     return cleaned_task
 
 
@@ -41,7 +37,7 @@ def valid_category(category):
     cleaned_category = category.strip()
 
     if cleaned_category == "":
-        raise ValueError("Category cannot be empty!")
+        raise ValueError("Category cannot be empty")
 
     if not re.search(r"\w", cleaned_category, re.UNICODE):
         raise ValueError("Category must contain at least one letter or number")
@@ -54,7 +50,7 @@ def valid_category(category):
 
 def valid_due_date(due_date, format_string="%Y-%m-%d"):
     if not isinstance(due_date, str):
-        raise ValueError("Expected a string value")
+        raise ValueError("Due date must be a string")
 
     due_date = due_date.strip()
 
@@ -64,10 +60,29 @@ def valid_due_date(due_date, format_string="%Y-%m-%d"):
     try:
         parsed_date = datetime.strptime(due_date, format_string).date()
     except ValueError:
-        raise ValueError("Invalid format. Use YYYY-MM-DD")
+        raise ValueError("Invalid date format. Use YYYY-MM-DD")
 
     if parsed_date < date.today():
         raise ValueError("Due date cannot be in the past")
 
     return due_date
-    
+
+
+def valid_options(option):
+    if not isinstance(option, int):
+        raise ValueError("Option must be an integer")
+
+    if option < 1 or option > 2:
+        raise ValueError("Option must be either 1 or 2")
+
+    return option
+
+
+def valid_list_sno(task_list, sno):
+    if not isinstance(sno, int):
+        raise ValueError("Serial number must be an integer")
+
+    if sno <= 0 or sno > len(task_list):
+        raise ValueError("Serial number is out of range")
+
+    return sno
