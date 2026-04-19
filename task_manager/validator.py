@@ -77,12 +77,3 @@ def valid_options(option):
 
     return option
 
-
-def valid_list_sno(task_list, sno):
-    if not isinstance(sno, int):
-        raise ValueError("Serial number must be an integer")
-
-    if sno <= 0 or sno > len(task_list):
-        raise ValueError("Serial number is out of range")
-
-    return sno

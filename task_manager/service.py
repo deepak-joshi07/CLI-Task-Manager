@@ -7,130 +7,128 @@ from .validator import (
     valid_priority,
     valid_task,
     valid_category,
-    valid_due_date,
-    valid_list_sno
+    valid_due_date
 )
+from .models import Task
 
 
 class TaskManager:
     def __init__(self):
         self.path = Path(__file__).resolve().parent.parent / "data" / "tasks.json"
-        self.tasks = load_task(self.path)
+        raw_tasks = load_task(self.path)
+        self.tasks = {
+            task_id: Task.from_dict(task_data)
+            for task_id, task_data in raw_tasks.items()
+        }
+
+    def _save(self):
+        data_to_save = {
+            task_id: task.to_dict()
+            for task_id, task in self.tasks.items()
+        }
+        save_task(self.path, data_to_save)
+
+    def _get_task_by_id(self, task_id):
+        if task_id not in self.tasks:
+            raise ValueError("Task not found")
+        return self.tasks[task_id]
+    
+    def list_tasks(self):
+        return self.sort_task_by_priority()
 
     def add_task(self, task, priority, category, due_date):
         task_id = str(uuid.uuid4())
 
-        valid_priority(priority)
-        task = valid_task(task)
-        category = valid_category(category)
-        due_date = valid_due_date(due_date)
-
-        completed = False
-        created_at = datetime.now().isoformat(timespec="seconds")
-        updated_at = None
-
-        self.tasks[task_id] = {
-            'task': task,
-            'priority': priority,
-            'category': category,
-            'due_date': due_date,
-            'completed': completed,
-            'created_at': created_at,
-            'updated_at': updated_at
-        }
-
-        save_task(self.path, self.tasks)
-
-        return {
-            "task_id": task_id,
-            "task": task,
-            "priority": priority,
-            "category": category,
-            "due_date": due_date,
-            "completed": completed,
-            "created_at": created_at,
-            "updated_at": updated_at
-        }
-
-    def sort_tasks(self):
-        return sorted(
-            self.tasks.items(),
-            key=lambda task_item: task_item[1]['priority']
+        new_task = Task(
+            task_id=task_id,
+            task=valid_task(task),
+            priority=valid_priority(priority),
+            category=valid_category(category),
+            due_date=valid_due_date(due_date),
+            completed=False,
+            created_at=datetime.now().isoformat(timespec="seconds"),
+            updated_at=None
         )
 
-    def list_tasks(self):
-        sorted_tasks = self.sort_tasks()
-        result = []
+        self.tasks[task_id] = new_task
+        self._save()
+        return new_task
 
-        for sno, (task_id, detail) in enumerate(sorted_tasks, start=1):
-            result.append((sno, task_id, detail))
+    def sort_tasks_by_priority(self):
+        return sorted(self.tasks.values(), key=lambda task: task.priority)
 
-        return result
-
-    def get_task_list_id_by_sno(self, task_list, sno):
-        valid_list_sno(task_list, sno)
-
-        for serial_number, task_id, _ in task_list:
-            if serial_number == sno:
-                return task_id
-
-        raise ValueError("Invalid serial number")
+    def sort_tasks_by_due_date(self):
+        return sorted(self.tasks.values(), key=lambda task: task._due_date_obj())
 
     def delete_task_by_id(self, task_id):
-        if task_id not in self.tasks:
-            raise ValueError("Task not found")
-
-        task_to_delete = self.tasks[task_id]
+        task = self._get_task_by_id(task_id)
         del self.tasks[task_id]
-        save_task(self.path, self.tasks)
+        self._save()
+        return task
 
-        return task_to_delete
+    def edit_task_by_id(
+        self,
+        task_id,
+        new_task=None,
+        new_priority=None,
+        new_category=None,
+        new_due_date=None
+    ):
+        task = self._get_task_by_id(task_id)
 
-    def delete_task_by_list(self, task_list, sno):
-        task_id = self.get_task_list_id_by_sno(task_list, sno)
-        return self.delete_task_by_id(task_id)
+        task.update(
+            task=valid_task(new_task) if new_task else None,
+            priority=valid_priority(new_priority) if new_priority else None,
+            category=valid_category(new_category) if new_category else None,
+            due_date=valid_due_date(new_due_date) if new_due_date else None
+        )
 
-    def edit_task_by_id(self, task_id, new_task=None, new_priority=None, new_category=None, new_due_date=None):
-        if task_id not in self.tasks:
-            raise ValueError("Task not found")
-
-        if new_task is not None:
-            self.tasks[task_id]['task'] = valid_task(new_task)
-
-        if new_priority is not None:
-            valid_priority(new_priority)
-            self.tasks[task_id]['priority'] = new_priority
-
-        if new_category is not None:
-            self.tasks[task_id]['category'] = valid_category(new_category)
-
-        if new_due_date is not None:
-            self.tasks[task_id]['due_date'] = valid_due_date(new_due_date)
-
-        self.tasks[task_id]['updated_at'] = datetime.now().isoformat(timespec="seconds")
-
-        save_task(self.path, self.tasks)
-        return self.tasks[task_id]
-
-    def edit_task_by_list(self, task_list, sno, new_task=None, new_priority=None, new_category=None, new_due_date=None):
-        task_id = self.get_task_list_id_by_sno(task_list, sno)
-        return self.edit_task_by_id(task_id, new_task, new_priority, new_category, new_due_date)
+        self._save()
+        return task
 
     def mark_task_complete_by_id(self, task_id):
-        if task_id not in self.tasks:
-            raise ValueError("Task not found")
+        task = self._get_task_by_id(task_id)
+        task.mark_complete()
+        self._save()
+        return task
 
-        completed_task = self.tasks[task_id]
+    def filter_by_completion_status(self, status="pending"):
+        if status not in ["pending", "completed"]:
+            raise ValueError("Status must be either 'pending' or 'completed'")
 
-        if completed_task['completed']:
-            raise ValueError("Task is already completed.")
+        return [
+            task
+            for task in self.sort_tasks_by_priority()
+            if (status == "completed" and task.completed)
+            or (status == "pending" and not task.completed)
+        ]
 
-        completed_task['completed'] = True
-        completed_task['updated_at'] = datetime.now().isoformat(timespec="seconds")
-        save_task(self.path, self.tasks)
+    def filter_overdue_tasks(self):
+        return sorted(
+            [task for task in self.tasks.values() if task.is_overdue()],
+            key=lambda task: task._due_date_obj()
+        )
 
-        return completed_task
+    def filter_task_due_today(self):
+        return sorted(
+            [task for task in self.tasks.values() if task.is_due_today()],
+            key=lambda task: task._due_date_obj()
+        )
 
-    def mark_task_complete(self, task_list, sno):
-        task_id = self.get_task_list_id_by_sno(task_list, sno)
-        return self.mark_task_complete_by_id(task_id)
+    def search_tasks(self, keyword):
+        keyword = keyword.strip().lower()
+
+        if not keyword:
+            raise ValueError("Search keyword cannot be empty")
+
+        return [
+            task
+            for task in self.sort_tasks_by_priority()
+            if (
+                keyword in task.task.lower()
+                or keyword in task.category.lower()
+                or keyword in task.due_date.lower()
+                or keyword in str(task.priority)
+                or keyword in ("completed" if task.completed else "pending")
+            )
+        ]

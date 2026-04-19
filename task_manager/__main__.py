@@ -4,39 +4,38 @@ from .validator import valid_options
 manager = TaskManager()
 
 
-def print_single_task(details, task_id=None, sno=None):
+def print_single_task(task, sno=None):
     prefix = f"{sno}. " if sno is not None else ""
-    task_id_text = f"Task ID: {task_id} | " if task_id is not None else ""
 
     print(
         f"{prefix}"
-        f"{task_id_text}"
-        f"Task: {details['task']} | "
-        f"Priority: {details['priority']} | "
-        f"Category: {details['category']} | "
-        f"Due Date: {details['due_date']} | "
-        f"Completed: {details['completed']} | "
-        f"Created_at: {details['created_at']} | "
-        f"Updated_at: {details['updated_at']}"
+        f"Task ID: {task.task_id} | "
+        f"Task: {task.task} | "
+        f"Priority: {task.priority} | "
+        f"Category: {task.category} | "
+        f"Due Date: {task.due_date} | "
+        f"Completed: {task.completed} | "
+        f"Created At: {task.created_at} | "
+        f"Updated At: {task.updated_at}"
     )
 
 
 def print_task_list(tasks):
-    for sno, task_id, details in tasks:
-        print_single_task(details, task_id, sno)
+    for sno, task in enumerate(tasks, start=1):
+        print_single_task(task, sno)
 
 
 def add_task():
     try:
         task = input("Enter the task you want to add: ")
-        priority = int(input("Enter the priority you want to assign: "))
-        category = input("Enter the category of the current task: ")
-        due_date = input("Enter the due date (YYYY-MM-DD): ")
+        priority = int(input("Enter the priority: "))
+        category = input("Enter the category: ")
+        due_date = input("Enter due date (YYYY-MM-DD): ")
 
-        task_added = manager.add_task(task, priority, category, due_date)
+        new_task = manager.add_task(task, priority, category, due_date)
 
-        print("\nTask added successfully")
-        print_single_task(task_added, task_added["task_id"])
+        print("\nTask added successfully:")
+        print_single_task(new_task)
 
     except ValueError as e:
         print(f"Error: {e}")
@@ -47,57 +46,62 @@ def get_all_tasks():
 
 
 def get_search_tasks():
-    keyword = input("Enter the keyword that you want to search: ")
+    keyword = input("Enter keyword to search: ")
     return manager.search_tasks(keyword)
 
 
 def select_options():
     option = int(input(
-        "Do you want to:\n"
-        "1. Search the task\n"
+        "Choose:\n"
+        "1. Search tasks\n"
         "2. List all tasks\n"
-        "Select either 1 or 2: "
+        "Enter 1 or 2: "
     ))
+    valid_options(option)
     return option
+
+
+def choose_task_source():
+    option = select_options()
+
+    if option == 1:
+        return get_search_tasks(), "Search Results"
+    else:
+        return get_all_tasks(), "All Tasks"
 
 
 def show_task_list(tasks, title="Tasks"):
     if not tasks:
         print("\nNo tasks found.")
-        return
+        return False
 
     print(f"\n{title}:\n")
     print_task_list(tasks)
+    return True
 
 
-def choose_task_source():
-    option = select_options()
-    valid_options(option)
+def get_valid_index(tasks):
+    sno = int(input("\nEnter serial number: "))
 
-    if option == 1:
-        tasks = get_search_tasks()
-        title = "Search Results"
-    else:
-        tasks = get_all_tasks()
-        title = "All Tasks"
+    if sno < 1 or sno > len(tasks):
+        raise ValueError("Invalid serial number")
 
-    return tasks, title
+    return sno - 1
 
 
 def delete_task():
     try:
         tasks, title = choose_task_source()
 
-        if not tasks:
-            print("\nNo matching tasks found.")
+        if not show_task_list(tasks, title):
             return
 
-        show_task_list(tasks, title)
+        index = get_valid_index(tasks)
+        task = tasks[index]
 
-        sno = int(input("\nEnter the serial number of the task to delete: "))
-        deleted_task = manager.delete_task_by_list(tasks, sno)
+        deleted_task = manager.delete_task_by_id(task.task_id)
 
-        print("\nTask deleted successfully")
+        print("\nTask deleted successfully:")
         print_single_task(deleted_task)
 
     except ValueError as e:
@@ -105,46 +109,41 @@ def delete_task():
 
 
 def get_edit_input():
-    new_task = input("Enter new task (leave blank to keep same): ").strip()
-    new_priority = input("Enter new priority (leave blank to keep same): ").strip()
-    new_category = input("Enter new category (leave blank to keep same): ").strip()
-    new_due_date = input("Enter new due date (leave blank to keep same): ").strip()
+    new_task = input("New task (leave blank to skip): ").strip()
+    new_priority = input("New priority (leave blank to skip): ").strip()
+    new_category = input("New category (leave blank to skip): ").strip()
+    new_due_date = input("New due date (leave blank to skip): ").strip()
 
-    new_task = new_task if new_task else None
-    new_priority = int(new_priority) if new_priority else None
-    new_category = new_category if new_category else None
-    new_due_date = new_due_date if new_due_date else None
-
-    return new_task, new_priority, new_category, new_due_date
+    return (
+        new_task or None,
+        int(new_priority) if new_priority else None,
+        new_category or None,
+        new_due_date or None
+    )
 
 
 def edit_task():
     try:
         tasks, title = choose_task_source()
 
-        if not tasks:
-            print("\nNo matching tasks found.")
+        if not show_task_list(tasks, title):
             return
 
-        show_task_list(tasks, title)
-        sno = int(input("\nEnter the serial number of the task to edit: "))
+        index = get_valid_index(tasks)
+        task = tasks[index]
 
-        new_task, new_priority, new_category, new_due_date = get_edit_input()
+        updates = get_edit_input()
 
-        if all(value is None for value in [new_task, new_priority, new_category, new_due_date]):
+        if all(v is None for v in updates):
             print("\nNo changes provided.")
             return
 
-        updated_task = manager.edit_task_by_list(
-            tasks,
-            sno,
-            new_task,
-            new_priority,
-            new_category,
-            new_due_date
+        updated_task = manager.edit_task_by_id(
+            task.task_id,
+            *updates
         )
 
-        print("\nTask updated successfully")
+        print("\nTask updated successfully:")
         print_single_task(updated_task)
 
     except ValueError as e:
@@ -155,16 +154,15 @@ def mark_task_complete():
     try:
         tasks, title = choose_task_source()
 
-        if not tasks:
-            print("\nNo matching tasks found.")
+        if not show_task_list(tasks, title):
             return
 
-        show_task_list(tasks, title)
+        index = get_valid_index(tasks)
+        task = tasks[index]
 
-        sno = int(input("\nEnter the serial number of task you want to mark complete: "))
-        completed_task = manager.mark_task_complete(tasks, sno)
+        completed_task = manager.mark_task_complete_by_id(task.task_id)
 
-        print("\nTask marked as completed successfully")
+        print("\nTask marked as completed:")
         print_single_task(completed_task)
 
     except ValueError as e:
