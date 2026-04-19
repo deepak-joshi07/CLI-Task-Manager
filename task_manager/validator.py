@@ -18,7 +18,7 @@ def valid_task(task):
 
     cleaned_task = task.strip()
 
-    if cleaned_task == "":
+    if not cleaned_task:
         raise ValueError("Task cannot be empty")
 
     if not re.search(r"\w", cleaned_task, re.UNICODE):
@@ -36,7 +36,7 @@ def valid_category(category):
 
     cleaned_category = category.strip()
 
-    if cleaned_category == "":
+    if not cleaned_category:
         raise ValueError("Category cannot be empty")
 
     if not re.search(r"\w", cleaned_category, re.UNICODE):
@@ -54,7 +54,7 @@ def valid_due_date(due_date, format_string="%Y-%m-%d"):
 
     due_date = due_date.strip()
 
-    if due_date == "":
+    if not due_date:
         raise ValueError("Due date cannot be empty")
 
     try:
@@ -62,8 +62,6 @@ def valid_due_date(due_date, format_string="%Y-%m-%d"):
     except ValueError:
         raise ValueError("Invalid date format. Use YYYY-MM-DD")
 
-    if parsed_date < date.today():
-        raise ValueError("Due date cannot be in the past")
 
     return due_date
 
