@@ -59,6 +59,8 @@ def valid_due_date(due_date, format_string="%Y-%m-%d"):
 
     try:
         parsed_date = datetime.strptime(due_date, format_string).date()
+        if parsed_date < date.today():
+            raise ValueError("Due date cannot be in the past")
     except ValueError:
         raise ValueError("Invalid date format. Use YYYY-MM-DD")
 

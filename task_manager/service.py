@@ -20,6 +20,7 @@ class TaskManager:
             task_id: Task.from_dict(task_data)
             for task_id, task_data in raw_tasks.items()
         }
+    
 
     def _save(self):
         data_to_save = {
@@ -34,7 +35,7 @@ class TaskManager:
         return self.tasks[task_id]
     
     def list_tasks(self):
-        return self.sort_task_by_priority()
+        return self.sort_tasks_by_priority()
 
     def add_task(self, task, priority, category, due_date):
         task_id = str(uuid.uuid4())
@@ -132,3 +133,22 @@ class TaskManager:
                 or keyword in ("completed" if task.completed else "pending")
             )
         ]
+    
+
+    def filter_tasks(self, status=None, category=None, priority=None):
+        tasks = self.tasks.values()
+
+        if status:
+            tasks = [
+                task for task in tasks
+                if (status == "completed" and task.completed)
+                or (status == "pending" and not task.completed)
+            ]
+
+        if category:
+            tasks = [task for task in tasks if task.category.lower() == category.lower()]
+
+        if priority:
+            tasks = [task for task in tasks if task.priority == priority]
+
+        return sorted(tasks, key=lambda t: t.priority)
